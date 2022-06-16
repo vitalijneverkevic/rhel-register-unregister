@@ -1,0 +1,60 @@
+---
+- name: Detach subscription, unregister and remove host from RHN account 
+  hosts: ansible-sandbox6.oss-lab.net
+  become: yes
+  ignore_errors: yes
+
+  vars_files:
+    - secrets/access_token 
+  
+
+  tasks: 
+    
+    - name: Get machine identity
+      shell: "subscription-manager identity | grep 'system identity' | sed 's/^.*: //'"
+      register: machine_id
+
+    - name: Set machine identity as a fact
+      set_fact: 
+        uuid: "{{ machine_id.stdout }}"
+
+#    - name: Debug machine_id
+#      debug:
+#        var: uuid
+
+    - name: Detach subscription 
+      shell: "subscription-manager remove --all"
+      register: detach
+
+    - name: Unregister machine 
+      shell: "subscription-manager unregister" 
+      register: unreg
+
+    - name: Flush subscription manager 
+      shell: "subscription-manager clean"
+      register: flush
+
+    - name: Debug operations with subscription-manager
+      debug: 
+        var: "{{ item }}"
+      loop:
+        - machine_id
+        - detach
+        - unreg
+        - flush
+         
+    - name: Remove host from RHN account via API call
+      uri:
+        url: "https://api.access.redhat.com/management/v1/systems/{{ uuid }}"
+        method: DELETE
+        return_content: true
+        status_code: [200, 204]
+        headers:
+          Authorization: "{{ access_token }}"
+      register: output
+
+    - name: Print output
+      debug:
+        var: output
+
+

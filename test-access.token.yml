@@ -1,0 +1,32 @@
+---
+- name: Test whether access token works 
+  hosts: localhost
+  become: no
+  
+  vars_files: 
+    - secrets/access_token
+
+  tasks: 
+  
+    - name: set fact
+      set_fact:
+        access: "{{ access_token }}"
+
+#    - name: Print variable access 
+#      debug:
+#        var: access
+        
+    - name: Make a test API call to list 10 systems 
+      uri:
+        url: https://api.access.redhat.com/management/v1/systems?limit=10
+        method: GET
+        return_content: true
+        headers:
+          Authorization: "{{ access }}"
+      register: output
+
+    - name: Print the output
+      debug:
+        var: output
+
+

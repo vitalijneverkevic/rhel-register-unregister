@@ -1,0 +1,28 @@
+---
+- name: API Call to list all hosts on the account
+  hosts: localhost
+  become: no
+  
+  vars_files: 
+    - secrets/access_token
+
+  tasks: 
+  
+    - name: Set access token var as a fact
+      set_fact:
+        access: "{{ access_token }}"
+
+    - name: Make an API call to list hosts
+      uri:
+        url: https://api.access.redhat.com/management/v1/systems
+        method: GET
+        return_content: true
+        headers:
+          Authorization: "{{ access_token }}"
+      register: output
+
+    - name: Print the output
+      debug:
+        var: output
+
+

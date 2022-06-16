@@ -1,0 +1,22 @@
+---
+- name: Register instance with RHN 
+  hosts: ansible-sandbox6.oss-lab.net
+  become: yes
+  
+  vars_files:
+    - secrets/creds
+    - vars/pools
+
+  tasks:
+
+    - name: Register host and attach specific pool ID
+      redhat_subscription: 
+        username: "{{ username }}"
+        password: "{{ password }}"
+        pool_ids: "{{ pool_id }}"
+        state: present
+      register: output
+
+    - name: Print the output of a task 
+      debug:
+        var: output

@@ -1,0 +1,32 @@
+---
+- name: Generate access-token file on localhost 
+  hosts: localhost
+  become: no
+  gather_facts: no 
+  vars_files: 
+    - secrets/offline_token
+
+  tasks: 
+
+    - name: Generate access-token 
+      uri:
+        url: https://sso.redhat.com/auth/realms/redhat-external/protocol/openid-connect/token
+        method: POST
+        body_format: form-urlencoded
+        body:
+          client_id: rhsm-api
+          grant_type: refresh_token
+          refresh_token: "{{ offline_token }}"
+        return_content: yes
+      register: output
+
+    - name: Print the output 
+      debug:
+        var: output.json.access_token
+
+    - name: Write new token into a file 
+      template:
+        src: templates/access-token-template.j2
+        dest: secrets/access_token
+
+        
